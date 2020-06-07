@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <link rel="stylesheet" href="app.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+
+    <style>
+	          @-webkit-keyframes pulse {
+				0% {
+					background-color: #CCC;
+				}
+				25% {
+					background-color: #EEE;
+				}
+				50% {
+					background-color: #CCC;
+				}
+				75% {
+					background-color: #EEE;
+				}
+				100% {
+					background-color: #CCC;
+				}
+			}
+			
+    </style>
+  </head>
+
+  <body>
+    <div class="app-page" data-page="home">
+      <div class="app-topbar blue">
+        <div class="app-title">send email</div>
+      </div>
+      <div class="app-content">
+    
+		<p class="app-section">
+					click below to send an email
+				</p>
+				
+				<div class="app-section" id="contact-list">
+					</div>
+				  <div class="app-section">
+          <div class="app-button" id="new-user">send to new user</div>
+        </div>
+      </div>
+    </div>
+<div class="app-page" data-page="send email">
+			<div class="app-topbar">
+				<div class="app-title"><span class="app-icon"></span>send email</div>
+				<div class="right app-button" data-back>Done</div>
+			</div>
+
+			<div class="app-content">
+			
+			<div class="app-section" id="content">
+				</div>
+				
+				<div class="app-section">
+				From:<input class="app-input" id="senderEmail" placeholder="sender email address">
+				</div>
+				
+				<div class="app-section">
+					To:<input class="app-input" id="recieverEmail" placeholder="reciever email address">
+				</div>
+
+				<form class="app-section">
+					<input class="app-input" name="subject"id="subject" placeholder="Subject">
+					<textarea class="app-input" name="message" id="message" placeholder="Message"></textarea>
+					<div class="app-button green app-submit"id="send-button">Send</div>
+				</form>
+			</div>
+		</div>
+    
+	
+    <script src="zepto.js"></script>
+    <script src="app.min.js"></script>
+    <script>
+	
+	
+      App.controller('home', function (page) {
+	  
+	  if(typeof localStorage!="undefined"){
+	  
+	  $(page).find("#new-user")
+	  .clickable()
+	  .click(function(){
+	  
+	  if(localStorage.getItem("recieverEmail")!=null){
+	  localStorage.removeItem("recieverEmail");
+	  }
+	  App.load("send email");
+	  })
+	  
+	  if(localStorage.getItem("recieverList")!=null){
+	  
+	  var recieverList=recieverList=JSON.parse(localStorage.getItem("recieverList"));
+	  $.each(recieverList, function( index, value ) {
+  $(page).find("#contact-list").append('<div class="app-button redirect" >' + value + '</div>');
+					
+});
+	  $(page).find("#contact-list").show();
+	  
+	  $(page).find(".redirect")
+	  .clickable()
+	  .on("click",function(){
+	  localStorage.setItem("recieverEmail",$(this).html());
+	  
+	  
+	  App.load('send email');
+	  
+	  })
+	  
+	  
+	  
+	  }
+	  else{
+	  $(page).find("#contact-list").hide();
+	  }
+	  
+	  
+	  
+	  
+	  }
+	  
+	  
+      
+      });
+
+  App.controller('send email', function (page) {
+  
+  $(page).find("#content").hide();
+  
+  
+  if(typeof localStorage!="undefined"){
+  
+  if(localStorage.getItem("senderEmail")!=null){
+  
+  $(page).find("#senderEmail").val(localStorage.getItem("senderEmail"));
+  
+  }
+  if(localStorage.getItem("recieverEmail")!=null){
+  
+  $(page).find("#recieverEmail").val(localStorage.getItem("recieverEmail"));
+  
+  }
+  
+   }
+  
+      $(page).find('#send-button')
+					.clickable()
+					.on('click', function () {
+					
+					$.ajax({
+  type: 'GET',
+  url: 'http://localhost/seharProject/emailApp.php?callback=response',
+  // data to be added to query string:
+  data: {to:$("#recieverEmail").val(),from:$("#senderEmail").val(),subject:$("#subject").val(),message:$("#message").val() },
+  // type of data we are expecting in return:
+  dataType: 'jsonp',
+  timeout: 300,
+  context: $('body'),
+  success: function(data){
+  
+  if(data.success==true){
+  
+  $(page).find("#content").html("your email was sent").show();
+  }
+  else{
+  $(page).find("#content").html("your email was not sent").show();
+  }
+  
+
+  },
+  error: function(xhr, type){
+ $(page).find("#content").html("your email was sent").show();
+  }
+  
+})
+
+if(typeof localStorage!="undefined"){
+localStorage.setItem("senderEmail",$("#senderEmail").val());
+
+var recieverList=new Array();
+if(localStorage.getItem("recieverList")!=null){
+recieverList=JSON.parse(localStorage.getItem("recieverList"));
+}
+if($.inArray($("#recieverEmail").val(),recieverList)==-1){
+recieverList.push($("#recieverEmail").val());
+
+recieverList.sort();
+
+localStorage.setItem("recieverList",JSON.stringify(recieverList));
+console.log(recieverList);
+
+}
+}
+
+
+
+
+else{
+
+}
+
+					
+	});
+					
+					
+					
+      });
+
+     
+     
+	  
+
+      try {
+        App.restore();
+      } catch (err) {
+        App.load('home');
+      }
+    </script>
+  </body>
+</html>
